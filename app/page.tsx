@@ -169,8 +169,8 @@ export default function Home() {
                 </button>
               </header>
 
-      <div className="flex">
-        <aside className="w-[240px] bg-[#ececec] min-h-screen p-7">
+      <div className="flex flex-col md:flex-row">
+        <aside className="w-full md:w-[240px] bg-[#ececec] md:min-h-screen p-7">
           <div>
             <a
               href="/board/zatsudan"
@@ -181,11 +181,11 @@ export default function Home() {
           </div>
         </aside>
 
-        <section className="flex-1 p-12">
+        <section className="flex-1 p-4 md:p-12">
           {games.length === 0 ? (
             <div className="text-gray-500">掲載ゲームはまだありません。</div>
           ) : (
-            <div className="grid grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-[320px] sm:max-w-none mx-auto sm:mx-0">
               {games.map((game) => (
                 <a
                   key={game.id}
