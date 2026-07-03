@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabaseClient";
 export type Thread = {
   id: string; // bigint を文字列として扱う（URLと相性が良い）
   title: string;
+  author: string;
   createdAt: string; // YYYY-MM-DD 文字列
   replies: number; // (投稿数 - 1) の概算
 };
@@ -10,6 +11,7 @@ export type Thread = {
 export type Post = {
   id: string;
   name: string;
+  userId: string;
   body: string;
   createdAt: string; // YYYY-MM-DD HH:mm
 };
@@ -53,7 +55,7 @@ function parseThreadId(threadId: string) {
 export async function loadThreads(): Promise<Thread[]> {
   const { data: threads, error } = await supabase
     .from("threads")
-    .select("id,title,created_at")
+    .select("id,title,author,created_at")
     .eq("category", CATEGORY)
     .order("created_at", { ascending: false });
 
@@ -61,6 +63,7 @@ export async function loadThreads(): Promise<Thread[]> {
   const base = (threads ?? []).map((t) => ({
     id: asIdString(t.id),
     title: t.title as string,
+    author: (t.author as string) || "名無し",
     createdAt: toDateString(t.created_at as string),
     replies: 0,
   }));
@@ -84,10 +87,15 @@ export async function loadThreads(): Promise<Thread[]> {
   return withReplies;
 }
 
-export async function createThread(title: string): Promise<{ id: string }> {
+export async function createThread(
+  title: string,
+  author: string
+): Promise<{ id: string }> {
+  const safeAuthor = author.trim() || "名無し";
+
   const { data, error } = await supabase
     .from("threads")
-    .insert([{ category: CATEGORY, title }])
+    .insert([{ category: CATEGORY, title, author: safeAuthor }])
     .select("id")
     .single();
 
@@ -102,7 +110,7 @@ export async function loadPosts(threadId: string): Promise<Post[]> {
 
   const { data, error } = await supabase
     .from("posts")
-    .select("id,name,body,created_at")
+    .select("id,name,user_id,body,created_at")
     .eq("thread_id", threadIdNum)
     .order("created_at", { ascending: true });
 
@@ -111,6 +119,7 @@ export async function loadPosts(threadId: string): Promise<Post[]> {
   return (data ?? []).map((p) => ({
     id: asIdString(p.id),
     name: p.name as string,
+    userId: (p.user_id as string) || "------",
     body: p.body as string,
     createdAt: toDateTimeString(p.created_at as string),
   }));
@@ -119,6 +128,7 @@ export async function loadPosts(threadId: string): Promise<Post[]> {
 export async function addPost(params: {
   threadId: string;
   name: string;
+  userId: string;
   body: string;
 }): Promise<void> {
   const threadIdNum = parseThreadId(params.threadId);
@@ -127,6 +137,7 @@ export async function addPost(params: {
     {
       thread_id: threadIdNum,
       name: params.name,
+      user_id: params.userId,
       body: params.body,
     },
   ]);
@@ -161,4 +172,27 @@ export function savePosts(_: string, __: Post[]) {
 }
 export function resetAllLocalData() {
   // DB運用では不要
+}
+// ======================
+// ゲーム一覧
+// ======================
+
+export type Game = {
+  id: number;
+  title: string;
+  author: string;
+  description: string;
+  thumbnail: string;
+  created_at?: string;
+};
+
+export async function loadGames(): Promise<Game[]> {
+  const { data, error } = await supabase
+    .from("games")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+
+  return data || [];
 }

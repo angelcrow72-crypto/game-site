@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import {
   loadThreads,
@@ -18,6 +18,7 @@ const MAX_BODY = 1000;
 // テスト用：管理者モード（本番前に削除）
 const ADMIN_KEY = "game-site:adminMode";
 const LAST_POST_KEY = "lastPostTime";
+const BOARD_USER_ID_KEY = "board_user_id";
 
 // ===== NGワード（最低限） =====
 const NG_WORDS = ["死ね", "殺す", "違法", "差別", "荒らし"];
@@ -60,6 +61,23 @@ function setLastPostTimeNow() {
   } catch {}
 }
 
+function createBoardUserId() {
+  return Math.random().toString(16).slice(2, 8).toUpperCase();
+}
+
+function getBoardUserId() {
+  if (typeof window === "undefined") return "------";
+
+  let id = localStorage.getItem(BOARD_USER_ID_KEY);
+
+  if (!id) {
+    id = createBoardUserId();
+    localStorage.setItem(BOARD_USER_ID_KEY, id);
+  }
+
+  return id;
+}
+
 export default function ZatsudanThreadPage() {
   const pathname = usePathname();
 
@@ -74,6 +92,7 @@ export default function ZatsudanThreadPage() {
 
   const [name, setName] = useState("名無しさん");
   const [body, setBody] = useState("");
+  const bodyInputRef = useRef<HTMLTextAreaElement | null>(null);
   const [toast, setToast] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -157,7 +176,12 @@ export default function ZatsudanThreadPage() {
     }
 
     try {
-      await addPost({ threadId, name: trimmedName, body: trimmedBody });
+      await addPost({
+        threadId,
+        name: trimmedName,
+        userId: getBoardUserId(),
+        body: trimmedBody,
+      });
       setLastPostTimeNow();
       setBody("");
       showToast("書き込みました");
@@ -263,19 +287,84 @@ export default function ZatsudanThreadPage() {
 
                   return (
                     <div
+                      id={`post-${idx + 1}`}
                       key={postId || `${idx}`}
                       className="rounded-lg border p-4"
                     >
                       <div className="flex justify-between text-sm text-gray-600">
-                        <span className="font-semibold">
-                          {p.name} #{idx + 1}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold">
+                            <span className="text-blue-600">#{idx + 1}</span> {p.name}
+                          </span>
+
+                          <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
+                            ID:{p.userId}
+                          </span>
+                        </div>
                         <span>{p.createdAt}</span>
                       </div>
 
-                      <p className="mt-2 whitespace-pre-wrap">{p.body}</p>
+                      <p className="mt-2 whitespace-pre-wrap">
+                        {p.body.split("\n").map((line, i) => {
+                          const match = line.match(/^>>(\d+)$/);
+                          const targetNo = match?.[1];
+
+                          return (
+                            <span key={i}>
+                              {targetNo ? (
+                                <button
+                                  type="button"
+                                  className="font-semibold text-blue-600 hover:underline"
+                                  onClick={() => {
+                                    document
+                                      .getElementById(`post-${targetNo}`)
+                                      ?.scrollIntoView({
+                                        behavior: "smooth",
+                                        block: "center",
+                                      });
+                                  }}
+                                >
+                                  {line}
+                                </button>
+                              ) : (
+                                line
+                              )}
+                              <br />
+                            </span>
+                          );
+                        })}
+                      </p>
 
                       <div className="mt-3 flex justify-end gap-3">
+
+                        <button
+                          className="rounded-lg border px-3 py-1 hover:bg-gray-50"
+                          onClick={() => {
+                            const replyText = `>>${idx + 1}\n`;
+
+                            setBody((prev) => replyText + prev);
+
+                            setTimeout(() => {
+                              const el = bodyInputRef.current;
+
+                              if (!el) return;
+
+                              el.scrollIntoView({
+                                behavior: "smooth",
+                                block: "center",
+                              });
+
+                              el.focus();
+
+                              const pos = replyText.length;
+
+                              el.setSelectionRange(pos, pos);
+                            }, 0);
+                          }}
+                        >
+                          返信
+                        </button>
+
                         <button
                           className="rounded-lg border px-3 py-1"
                           onClick={() => {
@@ -349,6 +438,8 @@ export default function ZatsudanThreadPage() {
               />
 
               <textarea
+                ref={bodyInputRef}
+                style={{ resize: "none" }}
                 className="mt-2 w-full rounded-lg border px-3 py-2"
                 rows={5}
                 placeholder="本文"

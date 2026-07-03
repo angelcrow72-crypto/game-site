@@ -2,15 +2,12 @@
   "compilerOptions": {
     /* === 基本設定 === */
     "target": "ES2020",
-    "lib": [
-      "DOM",
-      "DOM.Iterable",
-      "ES2020"
-    ],
+    "lib": ["DOM", "DOM.Iterable", "ES2020"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
+
     /* === モジュール関連 === */
     "module": "ESNext",
     "moduleResolution": "Bundler",
@@ -18,20 +15,20 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
+
     /* === Next.js 推奨 === */
     "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    /* === パスエイリアス（重要） === */
+    "plugins": [{ "name": "next" }],
+
+    /* === パスエイリアス === */
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./*"]
     },
+
+    /* === 追加（これが今回の対応） === */
+    "ignoreDeprecations": "5.0",
+
     "esModuleInterop": true
   },
   "include": [
@@ -41,7 +38,5 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }
