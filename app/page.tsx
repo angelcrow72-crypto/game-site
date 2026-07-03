@@ -190,7 +190,7 @@ export default function Home() {
                 <a
                   key={game.id}
                   href={`/game/${game.id}`}
-                  className="block border p-3 bg-white hover:shadow-lg transition"
+                  className="block border p-3 bg-white hover:shadow-lg transition opacity-100"
                 >
                   <div className="aspect-video bg-gray-200 rounded-lg flex items-center justify-center mb-3 overflow-hidden">
                     {game.thumbnail_url ? (
