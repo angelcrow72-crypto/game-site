@@ -271,11 +271,11 @@ export default function GameDetailPage() {
           <div className="mt-8 rounded-xl border p-4">
   <div className="flex gap-6">
     <div style={{ width: "260px" }} className="shrink-0">
-      <h2 className="text-2xl font-bold">基本情報</h2>
+      <h2 className="text-2xl font-bold text-black">基本情報</h2>
 
       <div className="mt-4 space-y-3">
         <div className="rounded p-3">
-          <div className="text-sm font-semibold">ゲームタイトル</div>
+          <div className="text-sm font-semibold text-black">ゲームタイトル</div>
           <div className="mt-1 text-black">{game.title}</div>
         </div>
 
