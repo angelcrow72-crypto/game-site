@@ -333,7 +333,9 @@ export default function GameDetailPage() {
 
           {game.webgl_play_url ? (
             <div className="mt-10">
-              <h2 className="mb-3 text-2xl font-bold">ブラウザでプレイ</h2>
+              <h2 className="mb-3 text-2xl font-bold text-black">
+                ブラウザでプレイ
+              </h2>
 
               <div className="aspect-video w-full overflow-hidden rounded-xl border bg-black">
                 <iframe
