@@ -65,7 +65,7 @@ export default function Home() {
       localStorage.setItem("gameverse_creator_id", data.creatorId);
       localStorage.setItem("gameverse_creator_name", data.creatorName || "");
 
-      window.location.href = "/creator/dashboard";
+      window.location.href = "/creator";
     } catch (e) {
       console.error(e);
       setModalMessage("確認中にエラーが発生しました。");
