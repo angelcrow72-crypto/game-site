@@ -276,12 +276,12 @@ export default function GameDetailPage() {
       <div className="mt-4 space-y-3">
         <div className="rounded p-3">
           <div className="text-sm font-semibold">ゲームタイトル</div>
-          <div className="mt-1">{game.title}</div>
+          <div className="mt-1 text-black">{game.title}</div>
         </div>
 
         <div className="rounded p-3">
           <div className="text-sm font-semibold">作者名</div>
-          <div className="mt-1">{game.creator}</div>
+          <div className="mt-1 text-black">{game.creator}</div>
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2 text-sm">
