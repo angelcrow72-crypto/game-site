@@ -204,7 +204,7 @@ export default function Home() {
                     )}
                   </div>
 
-                  <div className="font-bold">{game.title}</div>
+                  <div className="font-bold text-black">{game.title}</div>
                   <div className="text-gray-500 text-sm">{game.creator}</div>
 
                   <div className="mt-2 flex flex-wrap gap-2 text-xs">
@@ -233,7 +233,7 @@ export default function Home() {
                     )}
                   </div>
 
-                  <div className="text-sm mt-2 line-clamp-2">
+                  <div className="text-sm mt-2 line-clamp-2 text-black">
                     {game.description}
                   </div>
 
