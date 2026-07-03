@@ -280,7 +280,7 @@ export default function GameDetailPage() {
         </div>
 
         <div className="rounded p-3">
-          <div className="text-sm font-semibold">作者名</div>
+          <div className="text-sm font-semibold text-black">作者名</div>
           <div className="mt-1 text-black">{game.creator}</div>
         </div>
 
@@ -299,17 +299,17 @@ export default function GameDetailPage() {
         </div>
 
         <div className="rounded p-3">
-          <div className="text-sm font-semibold">ジャンル</div>
+          <div className="text-sm font-semibold text-black">ジャンル</div>
           <div className="mt-1">{game.genre || "未設定"}</div>
         </div>
 
         <div className="rounded p-3">
-          <div className="text-sm font-semibold">推奨年齢</div>
+          <div className="text-sm font-semibold text-black">推奨年齢</div>
           <div className="mt-1">{game.recommended_age || "未設定"}</div>
         </div>
 
         <div className="rounded p-3">
-          <div className="text-sm font-semibold">推奨環境</div>
+          <div className="text-sm font-semibold text-black">推奨環境</div>
           <div className="mt-1">{game.recommended_environment || "未設定"}</div>
         </div>
       </div>
