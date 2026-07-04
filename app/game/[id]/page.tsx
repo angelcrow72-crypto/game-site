@@ -316,10 +316,12 @@ export default function GameDetailPage() {
     </div>
 
     <div className="flex-1">
-      <h2 className="text-2xl font-bold">作品紹介</h2>
+      <h2 className="text-2xl font-bold text-black">
+        作品紹介
+      </h2>
 
       <div
-        className="mt-4 whitespace-pre-wrap rounded-lg border bg-white p-4"
+        className="mt-4 whitespace-pre-wrap rounded-lg border bg-white p-4 text-black"
         style={{
           height: "360px",
           overflowY: "auto",
