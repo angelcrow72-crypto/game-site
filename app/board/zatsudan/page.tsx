@@ -103,14 +103,14 @@ export default function ZatsudanPage() {
           <div className="mt-3 grid gap-3">
 
             <input
-              className="w-full rounded-lg border px-3 py-2"
+              className="w-full rounded-lg border px-3 py-2 placeholder:text-gray-500"
               placeholder="名前（未入力なら名無し）"
               value={author}
               onChange={(e) => setAuthor(e.target.value)}
             />
 
             <input
-              className="w-full rounded-lg border px-3 py-2"
+              className="w-full rounded-lg border px-3 py-2 placeholder:text-gray-500"
               placeholder="スレタイトル"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
