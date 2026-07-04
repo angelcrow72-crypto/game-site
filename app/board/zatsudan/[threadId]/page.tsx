@@ -133,22 +133,6 @@ export default function ZatsudanThreadPage() {
     refresh();
   }, [threadId]);
 
-  const onToggleAdmin = () => {
-    // OFF → ON のときだけパスワード要求（UI側の簡易ロック）
-    if (!adminMode) {
-      const pass = prompt("管理者パスワードを入力してください");
-      if (pass !== "GOYA2026") {
-        alert("パスワードが違います");
-        return;
-      }
-    }
-
-    const next = !adminMode;
-    setAdminMode(next);
-    saveAdminMode(next);
-    showToast(next ? "管理者モード: ON" : "管理者モード: OFF");
-  };
-
   const onSubmit = async () => {
     if (!canSubmit) return;
 
@@ -228,18 +212,10 @@ export default function ZatsudanThreadPage() {
           <a href="/board/zatsudan" className="text-blue-600 hover:underline">
             ← 雑談板へ戻る
           </a>
-
-          <button
-            className="rounded-lg border px-3 py-1 text-xs hover:bg-gray-50"
-            onClick={onToggleAdmin}
-            title="テスト用（本番前に削除）"
-          >
-            管理者モード：{adminMode ? "ON" : "OFF"}
-          </button>
         </div>
 
         <div className="mt-3 flex items-start justify-between gap-3">
-          <h1 className="text-2xl font-bold">{threadTitle}</h1>
+          <h1 className="text-2xl font-bold text-black">{threadTitle}</h1>
 
           {adminMode && threadExists && (
             <span className="shrink-0 text-xs text-gray-400">
@@ -249,7 +225,7 @@ export default function ZatsudanThreadPage() {
         </div>
 
         <details className="mt-4 rounded-lg border bg-gray-50 p-4">
-          <summary className="cursor-pointer text-sm font-semibold">
+          <summary className="cursor-pointer text-sm font-semibold text-black">
             注意書き（クリックで開閉）
           </summary>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-gray-700">
@@ -456,9 +432,6 @@ export default function ZatsudanThreadPage() {
                 書き込む
               </button>
 
-              <p className="mt-2 text-xs text-gray-500">
-                ※ 現在は匿名投稿（テスト運用）です
-              </p>
             </div>
           </>
         )}
