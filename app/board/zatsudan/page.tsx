@@ -87,11 +87,8 @@ export default function ZatsudanPage() {
           </div>
         )}
 
-        <div className="flex items-end justify-between">
+        <div className="flex items-end">
           <h1 className="text-2xl font-bold text-black">雑談</h1>
-          <span className="text-xs text-gray-500">
-            Supabase(DB)運用
-          </span>
         </div>
 
         {/* 新規スレ作成 */}
