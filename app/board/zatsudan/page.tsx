@@ -128,7 +128,7 @@ export default function ZatsudanPage() {
 
         <div className="mt-4 flex justify-end">
           <button
-            className="rounded-lg border px-3 py-1 text-xs hover:bg-gray-50"
+            className="rounded-lg border px-3 py-1 text-xs text-black hover:bg-gray-50"
             onClick={refresh}
           >
             再読み込み
@@ -155,7 +155,7 @@ export default function ZatsudanPage() {
                   href={`/board/zatsudan/${t.id}`}
                   className="block flex-1"
                 >
-                  <div className="font-semibold">
+                  <div className="font-semibold text-black">
                     {t.title}
                   </div>
 
