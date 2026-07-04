@@ -236,7 +236,7 @@ export default function ZatsudanThreadPage() {
 
         <div className="mt-4 flex justify-end">
           <button
-            className="rounded-lg border px-3 py-1 text-xs hover:bg-gray-50"
+            className="rounded-lg border px-3 py-1 text-xs text-black hover:bg-gray-50"
             onClick={refresh}
           >
             再読み込み
@@ -280,7 +280,7 @@ export default function ZatsudanThreadPage() {
                         <span>{p.createdAt}</span>
                       </div>
 
-                      <p className="mt-2 whitespace-pre-wrap">
+                      <p className="mt-2 whitespace-pre-wrap text-black">
                         {p.body.split("\n").map((line, i) => {
                           const match = line.match(/^>>(\d+)$/);
                           const targetNo = match?.[1];
@@ -314,7 +314,7 @@ export default function ZatsudanThreadPage() {
                       <div className="mt-3 flex justify-end gap-3">
 
                         <button
-                          className="rounded-lg border px-3 py-1 hover:bg-gray-50"
+                          className="rounded-lg border px-3 py-1 text-black hover:bg-gray-50"
                           onClick={() => {
                             const replyText = `>>${idx + 1}\n`;
 
@@ -342,7 +342,7 @@ export default function ZatsudanThreadPage() {
                         </button>
 
                         <button
-                          className="rounded-lg border px-3 py-1"
+                          className="rounded-lg border px-3 py-1 text-black"
                           onClick={() => {
                             if (!postId) {
                               alert("投稿IDが取得できませんでした");
@@ -407,7 +407,7 @@ export default function ZatsudanThreadPage() {
 
               <input
                 className="w-full rounded-lg border px-3 py-2 placeholder:text-gray-500"
-                placeholder="名前（任意）"
+                placeholder="名無しさん"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 maxLength={MAX_NAME}
