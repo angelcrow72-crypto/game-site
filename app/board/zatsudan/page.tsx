@@ -88,6 +88,14 @@ export default function ZatsudanPage() {
         )}
 
         <div className="flex items-end">
+
+          <a
+            href="/"
+            className="mb-4 inline-block text-blue-600 hover:underline"
+          >
+            ← トップページへ戻る
+          </a>
+          
           <h1 className="text-2xl font-bold text-black">雑談</h1>
         </div>
 
