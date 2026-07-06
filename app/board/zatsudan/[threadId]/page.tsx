@@ -406,7 +406,7 @@ export default function ZatsudanThreadPage() {
               <div className="text-lg font-bold text-black">書き込み</div>
 
               <input
-                className="w-full rounded-lg border px-3 py-2 placeholder:text-gray-700"
+                className="w-full rounded-lg border px-3 py-2 text-black placeholder:text-gray-700"
                 placeholder="名無しさん"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -416,7 +416,7 @@ export default function ZatsudanThreadPage() {
               <textarea
                 ref={bodyInputRef}
                 style={{ resize: "none" }}
-                className="w-full rounded-lg border px-3 py-2 placeholder:text-gray-700"
+                className="w-full rounded-lg border px-3 py-2 text-black placeholder:text-gray-700"
                 rows={5}
                 placeholder="本文"
                 value={body}
