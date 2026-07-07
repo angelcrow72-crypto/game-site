@@ -87,16 +87,17 @@ export default function ZatsudanPage() {
           </div>
         )}
 
-        <div className="mb-6">
-
+        <div className="mb-3">
           <a
             href="/"
-            className="mb-4 inline-block text-blue-600 hover:underline"
+            className="inline-block text-blue-600 hover:underline"
           >
             ← トップページへ戻る
           </a>
 
-          <h1 className="mt-3 text-2xl font-bold text-black">雑談</h1>
+          <h1 className="mt-2 text-2xl font-bold text-black">
+            雑談
+          </h1>
         </div>
 
         {/* 新規スレ作成 */}
