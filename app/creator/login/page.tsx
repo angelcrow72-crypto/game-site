@@ -84,9 +84,6 @@ export default function CreatorLoginPage() {
           </p>
         )}
 
-        <div className="mt-6 text-xs text-gray-500">
-          テスト用招待コード：K7xP2mQa9L
-        </div>
       </div>
     </main>
   );
