@@ -36,8 +36,15 @@ export default function CreatorLoginPage() {
         return;
       }
 
-      localStorage.setItem("creatorId", String(json.creator.id));
-      localStorage.setItem("creatorName", String(json.creator.display_name));
+      localStorage.setItem(
+        "gameverse_creator_id",
+        String(json.creator.id)
+      );
+
+      localStorage.setItem(
+        "gameverse_creator_name",
+        String(json.creator.display_name ?? "")
+      );
 
       location.href = "/creator/dashboard";
     } catch {
