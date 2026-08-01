@@ -19,7 +19,7 @@ export async function POST(req: Request) {
 
     const { data, error } = await supabase
       .from("invite_codes")
-      .select("id, code, creator_id, creator_name, is_active, expires_at, used")
+      .select("id, code, creator_id, creator_name, is_active, expires_at, used, single_use")
       .eq("code", code)
       .single();
 
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
       );
     }
 
-    if (data.used) {
+    if (data.single_use && data.used) {
       return NextResponse.json(
         { error: "この招待コードはすでに使用されています。" },
         { status: 401 }
@@ -51,20 +51,22 @@ export async function POST(req: Request) {
       );
     }
 
-    const { error: updateError } = await supabase
-      .from("invite_codes")
-      .update({
-        used: true,
-        used_at: new Date().toISOString(),
-      })
-      .eq("id", data.id);
+    if (data.single_use) {
+      const { error: updateError } = await supabase
+        .from("invite_codes")
+        .update({
+          used: true,
+          used_at: new Date().toISOString(),
+        })
+        .eq("id", data.id);
 
-    if (updateError) {
-      console.error(updateError);
-      return NextResponse.json(
-        { error: "招待コードの使用処理に失敗しました。" },
-        { status: 500 }
-      );
+      if (updateError) {
+        console.error(updateError);
+        return NextResponse.json(
+          { error: "招待コードの使用処理に失敗しました。" },
+          { status: 500 }
+        );
+      }
     }
 
     return NextResponse.json({
