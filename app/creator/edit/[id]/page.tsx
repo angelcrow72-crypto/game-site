@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
 
 type Game = {
   id: number;
@@ -53,30 +54,65 @@ export default function CreatorEditPage() {
       setMessage("ZIPファイルは2GB以下にしてください");
       return;
     }
+
     setUploadingZip(true);
     setMessage("ダウンロード用ZIPをアップロード中...");
 
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const res = await fetch("/api/upload/game", {
+      const signResponse = await fetch("/api/upload/game/sign", {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fileName: file.name,
+        }),
       });
 
-      const json = await res.json();
+      const signResult = await signResponse.json();
 
-      if (!res.ok) {
-        setMessage(json?.error ?? "ZIPアップロードに失敗しました");
-        return;
+      if (!signResponse.ok) {
+        throw new Error(
+          signResult?.error ?? "アップロードURLの発行に失敗しました"
+        );
       }
 
-      setDownloadUrl(json.url);
-      setMessage("ダウンロード用ZIPをアップロードしました。保存ボタンを押してください。");
-    } catch (e: any) {
-      console.error(e);
-      setMessage(e?.message ?? "ZIPアップロード中にエラーが発生しました");
+      const { path, token } = signResult;
+
+      if (!path || !token) {
+        throw new Error("アップロード情報を取得できませんでした");
+      }
+
+      const { error: uploadError } = await supabase.storage
+        .from("game-files")
+        .uploadToSignedUrl(path, token, file, {
+          contentType: "application/zip",
+        });
+
+      if (uploadError) {
+        throw new Error(uploadError.message);
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from("game-files")
+        .getPublicUrl(path);
+
+      if (!publicUrlData.publicUrl) {
+        throw new Error("ダウンロードURLの取得に失敗しました");
+      }
+
+      setDownloadUrl(publicUrlData.publicUrl);
+      setMessage(
+        "ダウンロード用ZIPをアップロードしました。保存ボタンを押してください。"
+      );
+    } catch (error) {
+      console.error("ZIP UPLOAD ERROR:", error);
+
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "ZIPアップロード中にエラーが発生しました"
+      );
     } finally {
       setUploadingZip(false);
     }
