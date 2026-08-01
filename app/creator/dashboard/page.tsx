@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
 
 type Game = {
   id: number;
@@ -125,33 +126,43 @@ export default function CreatorDashboardPage() {
   };
 
   const uploadZip = async (file: File) => {
-    setUploadingZip(true);
-    setMessage("");
+  setUploadingZip(true);
+  setMessage("");
 
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
+  try {
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const fileName = `${Date.now()}-${crypto.randomUUID()}-${safeName}`;
 
-      const res = await fetch("/api/upload/game", {
-        method: "POST",
-        body: formData,
+    const { data, error } = await supabase.storage
+      .from("game-files")
+      .upload(fileName, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: "application/zip",
       });
 
-      const json = await res.json();
-
-      if (!res.ok) {
-        setMessage(json?.error ?? "ZIPアップロードに失敗しました");
-        return;
-      }
-
-      setDownloadUrl(json.url);
-      setMessage("ZIPファイルをアップロードしました。");
-    } catch {
-      setMessage("ZIPアップロード中に通信エラーが発生しました");
-    } finally {
-      setUploadingZip(false);
+    if (error) {
+      setMessage(error.message);
+      return;
     }
-  };
+
+    const { data: publicUrl } = supabase.storage
+      .from("game-files")
+      .getPublicUrl(data.path);
+
+    setDownloadUrl(publicUrl.publicUrl);
+    setMessage("ZIPファイルをアップロードしました。");
+  } catch (e) {
+    const message =
+      e instanceof Error
+        ? e.message
+        : "ZIPアップロード中に通信エラーが発生しました";
+
+    setMessage(message);
+  } finally {
+    setUploadingZip(false);
+  }
+};
 
     const uploadWebGLZip = async (file: File) => {
       setUploadingWebglZip(true);
