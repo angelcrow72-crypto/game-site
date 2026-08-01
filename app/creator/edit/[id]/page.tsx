@@ -49,11 +49,10 @@ export default function CreatorEditPage() {
       return;
     }
 
-    if (file.size > 500 * 1024 * 1024) {
-      setMessage("ZIPファイルは500MB以下にしてください");
+    if (file.size > 2 * 1024 * 1024 * 1024) {
+      setMessage("ZIPファイルは2GB以下にしてください");
       return;
     }
-
     setUploadingZip(true);
     setMessage("ダウンロード用ZIPをアップロード中...");
 
