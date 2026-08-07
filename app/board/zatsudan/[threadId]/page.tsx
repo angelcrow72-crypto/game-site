@@ -224,6 +224,12 @@ export default function ZatsudanThreadPage() {
           )}
         </div>
 
+        {threadId === "1" && (
+          <p className="mt-3 text-sm text-gray-600">
+            ※書き込みにはテスト投稿が含まれています。
+          </p>
+        )}
+
         <details className="mt-4 rounded-lg border bg-gray-50 p-4">
           <summary className="cursor-pointer text-sm font-semibold text-black">
             注意書き（クリックで開閉）
