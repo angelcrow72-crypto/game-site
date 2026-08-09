@@ -227,7 +227,7 @@ export default function GameDetailPage() {
               <img
                 src={selectedImage}
                 alt=""
-                className="h-full w-full object-cover"
+                className="h-full w-full object-contain"
               />
             ) : (
               <div className="text-gray-500">サムネ未設定</div>
