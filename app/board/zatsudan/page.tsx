@@ -30,9 +30,25 @@ export default function ZatsudanPage() {
   };
 
   useEffect(() => {
-    const admin = localStorage.getItem("gameverse_admin") === "on";
-    setIsAdmin(admin);
-    refresh();
+    const initialize = async () => {
+      try {
+        const response = await fetch("/api/admin/session", {
+          method: "GET",
+          cache: "no-store",
+        });
+
+        const data = await response.json();
+
+        setIsAdmin(response.ok && data?.isAdmin === true);
+      } catch (error) {
+        console.error("Admin session check error:", error);
+        setIsAdmin(false);
+      }
+
+      await refresh();
+    };
+
+    initialize();
   }, []);
 
   const onCreate = async () => {

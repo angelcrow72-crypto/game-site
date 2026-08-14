@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "crypto";
+import { verifyAdminSessionToken } from "@/lib/adminAuth";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -13,8 +14,10 @@ const SESSION_SECONDS = 30 * 60;
 
 export async function POST(request: NextRequest) {
   try {
-    const isAdmin =
-      request.cookies.get(ADMIN_COOKIE_NAME)?.value === "true";
+    const token =
+      request.cookies.get(ADMIN_COOKIE_NAME)?.value;
+
+    const isAdmin = verifyAdminSessionToken(token);
 
     // 管理者はアクセス数に含めない
     if (isAdmin) {
@@ -118,8 +121,10 @@ export async function POST(request: NextRequest) {
 // 管理者ログイン前に記録された自分のアクセスを削除
 export async function DELETE(request: NextRequest) {
   try {
-    const isAdmin =
-      request.cookies.get(ADMIN_COOKIE_NAME)?.value === "true";
+    const token =
+      request.cookies.get(ADMIN_COOKIE_NAME)?.value;
+
+    const isAdmin = verifyAdminSessionToken(token);
 
     if (!isAdmin) {
       return NextResponse.json(

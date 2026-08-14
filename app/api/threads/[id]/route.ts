@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { verifyAdminSessionToken } from "@/lib/adminAuth";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -7,9 +8,21 @@ const supabase = createClient(
 );
 
 export async function DELETE(
-  req: Request,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const token =
+    req.cookies.get("gameverse_admin")?.value;
+
+  const isAdmin = verifyAdminSessionToken(token);
+
+  if (!isAdmin) {
+    return NextResponse.json(
+      { error: "管理者のみ削除できます。" },
+      { status: 403 }
+    );
+  }
+  
   const { id } = await params;
   const threadId = Number(id);
 

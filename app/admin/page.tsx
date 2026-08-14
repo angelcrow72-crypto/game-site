@@ -2,9 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-const ADMIN_KEY = "game-site:adminMode";
-const ADMIN_PASSWORD = "GOYA2026";
-
 type VisitStats = {
   total: number;
   today: number;
@@ -59,54 +56,93 @@ export default function AdminPage() {
   }, []);
 
   useEffect(() => {
-    const savedAdminMode =
-      localStorage.getItem(ADMIN_KEY) === "1";
+    const checkSession = async () => {
+      try {
+        const response = await fetch("/api/admin/session", {
+          method: "GET",
+          cache: "no-store",
+        });
 
-    setAdminMode(savedAdminMode);
+        const data = await response.json();
 
-    if (savedAdminMode) {
-      // 以前から管理者モードがONだった場合もCookieを同期
-      document.cookie =
-        "gameverse_admin=true; path=/; max-age=31536000; SameSite=Lax";
+        if (!response.ok) {
+          setAdminMode(false);
+          return;
+        }
 
-      loadVisitStats();
-    }
+        const loggedIn = data?.isAdmin === true;
+
+        setAdminMode(loggedIn);
+
+        if (loggedIn) {
+          loadVisitStats();
+        }
+      } catch (error) {
+        console.error("Admin session check error:", error);
+        setAdminMode(false);
+      }
+    };
+
+    checkSession();
   }, [loadVisitStats]);
 
   const login = async () => {
-    if (password !== ADMIN_PASSWORD) {
-      setMessage("パスワードが違います。");
-      return;
+    setMessage("");
+
+    try {
+      const response = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setMessage(data?.error ?? "ログインに失敗しました。");
+        return;
+      }
+
+      setAdminMode(true);
+      setPassword("");
+      setMessage("管理者モードをONにしました。");
+
+      await fetch("/api/visit", {
+        method: "DELETE",
+      }).catch((error) => {
+        console.error("Visit cleanup failed:", error);
+      });
+
+      loadVisitStats();
+    } catch (error) {
+      console.error("Admin login error:", error);
+      setMessage("ログイン処理中に通信エラーが発生しました。");
     }
-
-    localStorage.setItem(ADMIN_KEY, "1");
-
-    document.cookie =
-      "gameverse_admin=true; path=/; max-age=31536000; SameSite=Lax";
-
-    setAdminMode(true);
-    setPassword("");
-    setMessage("管理者モードをONにしました。");
-
-    await fetch("/api/visit", {
-      method: "DELETE",
-    }).catch((error) => {
-      console.error("Visit cleanup failed:", error);
-    });
-
-    loadVisitStats();
   };
 
-  const logout = () => {
-    localStorage.setItem(ADMIN_KEY, "0");
+  const logout = async () => {
+    try {
+      const response = await fetch("/api/admin/logout", {
+        method: "POST",
+      });
 
-    document.cookie =
-      "gameverse_admin=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+      if (!response.ok) {
+        setMessage("管理者モードの終了に失敗しました。");
+        return;
+      }
 
-    setAdminMode(false);
-    setVisitStats(null);
-    setStatsError("");
-    setMessage("管理者モードをOFFにしました。");
+      setAdminMode(false);
+      setVisitStats(null);
+      setStatsError("");
+      setMessage("管理者モードをOFFにしました。");
+    } catch (error) {
+      console.error("Admin logout error:", error);
+      setMessage("ログアウト処理中に通信エラーが発生しました。");
+    }
   };
 
   return (
