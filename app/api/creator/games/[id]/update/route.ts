@@ -16,7 +16,11 @@ export async function POST(
 
     const title = String(body?.title ?? "").trim();
     const description = String(body?.description ?? "").trim();
-    const thumbnailUrl = String(body?.thumbnailUrl ?? "").trim();
+    const thumbnailUrls = Array.isArray(body?.thumbnailUrls)
+      ? body.thumbnailUrls
+        .map((url: unknown) => String(url).trim())
+        .filter((url: string) => url !== "")
+      : [];
     const downloadUrl = String(body?.downloadUrl ?? "").trim();
     const webglPlayUrl = String(body?.webglPlayUrl ?? "").trim();
 
@@ -32,8 +36,8 @@ export async function POST(
       .update({
         title,
         description,
-        thumbnail_url: thumbnailUrl,
-        thumbnail_urls: thumbnailUrl ? [thumbnailUrl] : [],
+        thumbnail_url: thumbnailUrls[0] ?? "",
+        thumbnail_urls: thumbnailUrls,
         download_url: downloadUrl,
         webgl_play_url: webglPlayUrl,
       })

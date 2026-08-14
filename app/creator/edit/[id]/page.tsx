@@ -9,6 +9,7 @@ type Game = {
   title: string;
   description?: string;
   thumbnail_url?: string;
+  thumbnail_urls?: string[];
   download_url?: string;
   webgl_play_url?: string;
 };
@@ -19,7 +20,7 @@ export default function CreatorEditPage() {
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [thumbnailUrl, setThumbnailUrl] = useState("");
+  const [thumbnailUrls, setThumbnailUrls] = useState<string[]>([""]);
   const [downloadUrl, setDownloadUrl] = useState("");
   const [webglPlayUrl, setWebglPlayUrl] = useState("");
 
@@ -35,16 +36,37 @@ export default function CreatorEditPage() {
       .then((game: Game) => {
         setTitle(game.title || "");
         setDescription(game.description || "");
-        setThumbnailUrl(game.thumbnail_url || "");
+        setThumbnailUrls(
+          Array.isArray(game.thumbnail_urls) && game.thumbnail_urls.length > 0
+            ? game.thumbnail_urls
+            : game.thumbnail_url
+            ? [game.thumbnail_url]
+            : [""]
+        );
         setDownloadUrl(game.download_url || "");
         setWebglPlayUrl(game.webgl_play_url || "");
       })
       .catch(() => {
         setMessage("ゲーム情報の取得に失敗しました");
       });
-  }, [gameId]);
+    }, [gameId]);
 
-  const uploadZip = async (file: File) => {
+    const updateThumbnailUrl = (index: number, value: string) => {
+      const next = [...thumbnailUrls];
+      next[index] = value;
+      setThumbnailUrls(next);
+    };
+
+    const addThumbnailUrl = () => {
+      setThumbnailUrls([...thumbnailUrls, ""]);
+    };
+
+    const removeThumbnailUrl = (index: number) => {
+      if (thumbnailUrls.length === 1) return;
+      setThumbnailUrls(thumbnailUrls.filter((_, i) => i !== index));
+    };
+
+    const uploadZip = async (file: File) => {
     if (!file.name.toLowerCase().endsWith(".zip")) {
       setMessage("ZIPファイルのみアップロードできます");
       return;
@@ -175,7 +197,9 @@ export default function CreatorEditPage() {
         body: JSON.stringify({
           title: title.trim(),
           description: description.trim(),
-          thumbnailUrl: thumbnailUrl.trim(),
+          thumbnailUrls: thumbnailUrls
+            .map((url) => url.trim())
+            .filter((url) => url !== ""),
           downloadUrl: downloadUrl.trim(),
           webglPlayUrl: webglPlayUrl.trim(),
         }),
@@ -259,14 +283,47 @@ export default function CreatorEditPage() {
 
           <div>
             <label className="mb-1 block text-sm font-semibold">
-              サムネURL（任意）
+              サムネURL（任意・複数可）
             </label>
-            <input
-              value={thumbnailUrl}
-              onChange={(e) => setThumbnailUrl(e.target.value)}
-              className="w-full rounded-lg border px-4 py-3"
-              placeholder="https://..."
-            />
+
+            <div className="space-y-2">
+              {thumbnailUrls.map((url, index) => (
+                <div key={index} className="flex gap-2">
+                  <input
+                    value={url}
+                    onChange={(e) =>
+                      updateThumbnailUrl(index, e.target.value)
+                    }
+                    className="w-full rounded-lg border px-4 py-2"
+                    placeholder={`サムネURL ${index + 1}`}
+                  />
+
+                  {thumbnailUrls.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeThumbnailUrl(index)}
+                      className="rounded-lg border px-3 text-sm text-red-600 hover:bg-red-50"
+                    >
+                      削除
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-2 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={addThumbnailUrl}
+                className="rounded-lg border px-4 py-2 text-sm hover:bg-gray-50"
+              >
+                ＋ サムネURLを追加
+              </button>
+
+              <p className="text-xs text-gray-500">
+                1枚目がトップページのサムネとして表示されます。
+              </p>
+            </div>
           </div>
 
           <div>
