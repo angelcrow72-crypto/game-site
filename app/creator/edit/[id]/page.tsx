@@ -7,6 +7,10 @@ import { supabase } from "@/lib/supabaseClient";
 type Game = {
   id: number;
   title: string;
+  creator?: string;
+  genre?: string;
+  recommended_age?: string;
+  recommended_environment?: string;
   description?: string;
   thumbnail_url?: string;
   thumbnail_urls?: string[];
@@ -14,11 +18,35 @@ type Game = {
   webgl_play_url?: string;
 };
 
+const GENRE_OPTIONS = [
+  "ホラー",
+  "RPG",
+  "アドベンチャー",
+  "ノベル",
+  "アクション",
+  "シューティング",
+  "パズル",
+  "シミュレーション",
+  "その他",
+];
+
+const AGE_OPTIONS = [
+  "全年齢",
+  "12歳以上",
+  "15歳以上",
+  "17歳以上",
+];
+
 export default function CreatorEditPage() {
   const pathname = usePathname();
   const gameId = pathname.split("/").pop();
 
   const [title, setTitle] = useState("");
+  const [creator, setCreator] = useState("");
+  const [genre, setGenre] = useState("");
+  const [customGenre, setCustomGenre] = useState("");
+  const [recommendedAge, setRecommendedAge] = useState("");
+  const [recommendedEnvironment, setRecommendedEnvironment] = useState("");
   const [description, setDescription] = useState("");
   const [thumbnailUrls, setThumbnailUrls] = useState<string[]>([""]);
   const [downloadUrl, setDownloadUrl] = useState("");
@@ -35,38 +63,57 @@ export default function CreatorEditPage() {
       .then((res) => res.json())
       .then((game: Game) => {
         setTitle(game.title || "");
+        setCreator(game.creator || "");
+
+        const savedGenre = game.genre || "";
+
+        if (GENRE_OPTIONS.includes(savedGenre)) {
+          setGenre(savedGenre);
+          setCustomGenre("");
+        } else if (savedGenre) {
+          setGenre("その他");
+          setCustomGenre(savedGenre);
+        } else {
+          setGenre("ホラー");
+          setCustomGenre("");
+        }
+
+        setRecommendedAge(game.recommended_age || "全年齢");
+        setRecommendedEnvironment(game.recommended_environment || "");
         setDescription(game.description || "");
+
         setThumbnailUrls(
           Array.isArray(game.thumbnail_urls) && game.thumbnail_urls.length > 0
             ? game.thumbnail_urls
             : game.thumbnail_url
-            ? [game.thumbnail_url]
-            : [""]
+              ? [game.thumbnail_url]
+              : [""]
         );
+
         setDownloadUrl(game.download_url || "");
         setWebglPlayUrl(game.webgl_play_url || "");
       })
       .catch(() => {
         setMessage("ゲーム情報の取得に失敗しました");
       });
-    }, [gameId]);
+  }, [gameId]);
 
-    const updateThumbnailUrl = (index: number, value: string) => {
-      const next = [...thumbnailUrls];
-      next[index] = value;
-      setThumbnailUrls(next);
-    };
+  const updateThumbnailUrl = (index: number, value: string) => {
+    const next = [...thumbnailUrls];
+    next[index] = value;
+    setThumbnailUrls(next);
+  };
 
-    const addThumbnailUrl = () => {
-      setThumbnailUrls([...thumbnailUrls, ""]);
-    };
+  const addThumbnailUrl = () => {
+    setThumbnailUrls([...thumbnailUrls, ""]);
+  };
 
-    const removeThumbnailUrl = (index: number) => {
-      if (thumbnailUrls.length === 1) return;
-      setThumbnailUrls(thumbnailUrls.filter((_, i) => i !== index));
-    };
+  const removeThumbnailUrl = (index: number) => {
+    if (thumbnailUrls.length === 1) return;
+    setThumbnailUrls(thumbnailUrls.filter((_, i) => i !== index));
+  };
 
-    const uploadZip = async (file: File) => {
+  const uploadZip = async (file: File) => {
     if (!file.name.toLowerCase().endsWith(".zip")) {
       setMessage("ZIPファイルのみアップロードできます");
       return;
@@ -161,13 +208,18 @@ export default function CreatorEditPage() {
       const result = await res.json();
 
       if (!res.ok || !result.ok) {
-        throw new Error(result.error || "WebGL ZIPのアップロードに失敗しました");
+        throw new Error(
+          result.error || "WebGL ZIPのアップロードに失敗しました"
+        );
       }
 
       setWebglPlayUrl(result.webgl_play_url);
-      setMessage("WebGL ZIPをアップロードしました。保存ボタンを押してください。");
+      setMessage(
+        "WebGL ZIPをアップロードしました。保存ボタンを押してください。"
+      );
     } catch (error) {
       console.error(error);
+
       setMessage(
         error instanceof Error
           ? error.message
@@ -186,6 +238,19 @@ export default function CreatorEditPage() {
       return;
     }
 
+    if (!creator.trim()) {
+      setMessage("作者名を入力してください");
+      return;
+    }
+
+    if (genre === "その他" && !customGenre.trim()) {
+      setMessage("ジャンルを入力してください");
+      return;
+    }
+
+    const genreToSave =
+      genre === "その他" ? customGenre.trim() : genre.trim();
+
     setMessage("保存中...");
 
     try {
@@ -196,6 +261,10 @@ export default function CreatorEditPage() {
         },
         body: JSON.stringify({
           title: title.trim(),
+          creator: creator.trim(),
+          genre: genreToSave,
+          recommendedAge: recommendedAge.trim(),
+          recommendedEnvironment: recommendedEnvironment.trim(),
           description: description.trim(),
           thumbnailUrls: thumbnailUrls
             .map((url) => url.trim())
@@ -247,41 +316,134 @@ export default function CreatorEditPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-100 p-8">
-      <div className="mx-auto max-w-3xl rounded-2xl bg-white p-8 shadow">
-        <a href="/creator/dashboard" className="text-blue-600">
+    <main className="min-h-screen bg-gray-100 p-2">
+      <div className="mx-auto max-w-6xl rounded-2xl bg-white p-4 shadow">
+        <a
+          href="/creator/dashboard"
+          className="text-blue-600 hover:underline"
+        >
           ← クリエイターページへ戻る
         </a>
 
-        <h1 className="mt-6 text-3xl font-bold">作品情報を編集</h1>
+        <h1 className="mt-4 text-3xl font-bold">作品情報を編集</h1>
 
-        <div className="mt-8 space-y-5">
-          <div>
-            <label className="mb-1 block text-sm font-semibold">
-              ゲームタイトル
-            </label>
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full rounded-lg border px-4 py-3"
-            />
+        <section className="mt-4 rounded-xl border p-3">
+          <div className="flex gap-4">
+            {/* 左側：基本情報 */}
+            <div className="w-[260px] shrink-0">
+              <h2 className="text-xl font-bold">基本情報</h2>
+
+              <div className="mt-3 space-y-3">
+                <div>
+                  <label className="mb-1 block text-sm font-semibold">
+                    ゲームタイトル
+                  </label>
+                  <input
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="w-full rounded-lg border px-4 py-2"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-semibold">
+                    作者名
+                  </label>
+                  <input
+                    value={creator}
+                    onChange={(e) => setCreator(e.target.value)}
+                    className="w-full rounded-lg border px-4 py-2"
+                    placeholder="例：GOYA"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-semibold">
+                    ゲームジャンル
+                  </label>
+
+                  <select
+                    value={genre}
+                    onChange={(e) => setGenre(e.target.value)}
+                    className="w-full rounded-lg border px-4 py-2"
+                  >
+                    <option>ホラー</option>
+                    <option>RPG</option>
+                    <option>アドベンチャー</option>
+                    <option>ノベル</option>
+                    <option>アクション</option>
+                    <option>シューティング</option>
+                    <option>パズル</option>
+                    <option>シミュレーション</option>
+                    <option>その他</option>
+                  </select>
+
+                  {genre === "その他" && (
+                    <input
+                      value={customGenre}
+                      onChange={(e) => setCustomGenre(e.target.value)}
+                      className="mt-3 w-full rounded-lg border px-4 py-2"
+                      placeholder="ジャンルを入力してください"
+                    />
+                  )}
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-semibold">
+                    推奨年齢
+                  </label>
+
+                  <select
+                    value={recommendedAge}
+                    onChange={(e) => setRecommendedAge(e.target.value)}
+                    className="w-full rounded-lg border px-4 py-2"
+                  >
+                    <option>全年齢</option>
+                    <option>12歳以上</option>
+                    <option>15歳以上</option>
+                    <option>17歳以上</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-semibold">
+                    推奨環境
+                  </label>
+                  <input
+                    value={recommendedEnvironment}
+                    onChange={(e) =>
+                      setRecommendedEnvironment(e.target.value)
+                    }
+                    className="w-full rounded-lg border px-4 py-2"
+                    placeholder="例：Windows 10 / 11"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 右側：作品紹介 */}
+            <div className="min-w-0 flex-1">
+              <h2 className="text-xl font-bold">作品紹介</h2>
+
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="mt-3 h-[360px] w-full rounded-lg border px-4 py-3"
+                style={{
+                  resize: "none",
+                  minHeight: "360px",
+                }}
+                placeholder="ゲーム紹介、想定プレイ時間、ED数、操作方法、実況・配信許諾等を自由に入力してください。"
+              />
+            </div>
           </div>
+        </section>
 
-          <div>
-            <label className="mb-1 block text-sm font-semibold">
-              作品紹介
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full rounded-lg border px-4 py-3"
-              rows={10}
-              style={{ resize: "none" }}
-              placeholder="ゲーム紹介、想定プレイ時間、ED数、操作方法、実況・配信許諾等を自由に入力してください。"
-            />
-          </div>
+        {/* サムネイル */}
+        <section className="mt-3 rounded-xl border p-3">
+          <h2 className="text-xl font-bold">素材・配布</h2>
 
-          <div>
+          <div className="mt-4">
             <label className="mb-1 block text-sm font-semibold">
               サムネURL（任意・複数可）
             </label>
@@ -326,7 +488,8 @@ export default function CreatorEditPage() {
             </div>
           </div>
 
-          <div>
+          {/* ダウンロード版 */}
+          <div className="mt-6">
             <label className="mb-1 block text-sm font-semibold">
               ダウンロード用ZIP（任意）
             </label>
@@ -343,6 +506,7 @@ export default function CreatorEditPage() {
                 }}
                 className="hidden"
               />
+
               <span className="text-gray-500">
                 {uploadingZip
                   ? "アップロード中..."
@@ -357,7 +521,8 @@ export default function CreatorEditPage() {
             )}
           </div>
 
-          <div>
+          {/* ブラウザ版 */}
+          <div className="mt-6">
             <label className="mb-1 block text-sm font-semibold">
               WebGL版（ブラウザプレイ・任意）
             </label>
@@ -374,6 +539,7 @@ export default function CreatorEditPage() {
                 }}
                 className="hidden"
               />
+
               <span className="text-gray-500">
                 {uploadingWebglZip
                   ? "アップロード中..."
@@ -390,20 +556,22 @@ export default function CreatorEditPage() {
 
           <button
             onClick={onSave}
-            className="w-full rounded-lg bg-black px-4 py-3 font-bold text-white hover:bg-gray-800"
+            className="mt-6 w-full rounded-lg bg-black px-4 py-3 font-bold text-white hover:bg-gray-800"
           >
             保存する
           </button>
 
           <button
             onClick={deleteGame}
-            className="w-full rounded-lg border border-red-300 bg-white px-4 py-3 font-bold text-red-600 hover:bg-red-50"
+            className="mt-3 w-full rounded-lg border border-red-300 bg-white px-4 py-3 font-bold text-red-600 hover:bg-red-50"
           >
             このゲームを削除
           </button>
 
-          {message && <p className="text-sm text-blue-600">{message}</p>}
-        </div>
+          {message && (
+            <p className="mt-3 text-sm text-blue-600">{message}</p>
+          )}
+        </section>
       </div>
     </main>
   );

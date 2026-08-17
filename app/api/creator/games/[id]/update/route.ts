@@ -15,12 +15,20 @@ export async function POST(
     const body = await req.json();
 
     const title = String(body?.title ?? "").trim();
+    const creator = String(body?.creator ?? "").trim();
+    const genre = String(body?.genre ?? "").trim();
+    const recommendedAge = String(body?.recommendedAge ?? "").trim();
+    const recommendedEnvironment = String(
+      body?.recommendedEnvironment ?? ""
+    ).trim();
     const description = String(body?.description ?? "").trim();
+
     const thumbnailUrls = Array.isArray(body?.thumbnailUrls)
       ? body.thumbnailUrls
-        .map((url: unknown) => String(url).trim())
-        .filter((url: string) => url !== "")
+          .map((url: unknown) => String(url).trim())
+          .filter((url: string) => url !== "")
       : [];
+
     const downloadUrl = String(body?.downloadUrl ?? "").trim();
     const webglPlayUrl = String(body?.webglPlayUrl ?? "").trim();
 
@@ -35,6 +43,10 @@ export async function POST(
       .from("games")
       .update({
         title,
+        creator,
+        genre,
+        recommended_age: recommendedAge,
+        recommended_environment: recommendedEnvironment,
         description,
         thumbnail_url: thumbnailUrls[0] ?? "",
         thumbnail_urls: thumbnailUrls,
@@ -44,7 +56,10 @@ export async function POST(
       .eq("id", id);
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json(
+        { error: error.message },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({ success: true });
