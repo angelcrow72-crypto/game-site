@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
@@ -7,11 +7,44 @@ const supabase = createClient(
 );
 
 export async function POST(
-  req: Request,
+  req: NextRequest,
   ctx: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await ctx.params;
+
+    // HttpOnly Cookieからセッショントークンを取得
+    const token = req.cookies.get("gameverse_creator_session")?.value;
+
+    if (!token) {
+      return NextResponse.json(
+        { error: "ログインが必要です。" },
+        { status: 401 }
+      );
+    }
+
+    // セッションを確認
+    const { data: session, error: sessionError } = await supabase
+      .from("creator_sessions")
+      .select("creator_id, expires_at")
+      .eq("token", token)
+      .single();
+
+    if (sessionError || !session) {
+      return NextResponse.json(
+        { error: "ログインセッションが無効です。" },
+        { status: 401 }
+      );
+    }
+
+    // セッションの有効期限を確認
+    if (new Date(session.expires_at) < new Date()) {
+      return NextResponse.json(
+        { error: "ログインセッションの有効期限が切れています。" },
+        { status: 401 }
+      );
+    }
+
     const body = await req.json();
 
     const title = String(body?.title ?? "").trim();
@@ -39,7 +72,8 @@ export async function POST(
       );
     }
 
-    const { error } = await supabase
+    // ログイン中の作者本人が所有している作品だけ更新
+    const { data: updatedGame, error } = await supabase
       .from("games")
       .update({
         title,
@@ -53,12 +87,23 @@ export async function POST(
         download_url: downloadUrl,
         webgl_play_url: webglPlayUrl,
       })
-      .eq("id", id);
+      .eq("id", id)
+      .eq("creator_id", session.creator_id)
+      .select("id")
+      .maybeSingle();
 
     if (error) {
       return NextResponse.json(
         { error: error.message },
         { status: 500 }
+      );
+    }
+
+    // IDは存在していても、別作者の作品なら更新されない
+    if (!updatedGame) {
+      return NextResponse.json(
+        { error: "このゲームを編集する権限がありません。" },
+        { status: 403 }
       );
     }
 

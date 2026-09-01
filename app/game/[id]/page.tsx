@@ -48,13 +48,7 @@ export default function GameDetailPage() {
   useEffect(() => {
     if (!gameId) return;
 
-    const viewerCreatorId = localStorage.getItem("creatorId") || "";
-
-    fetch(`/api/games/${gameId}`, {
-      headers: {
-        "x-viewer-creator-id": viewerCreatorId,
-      },
-    })
+    fetch(`/api/games/${gameId}`)
       .then((res) => res.json())
       .then((data: Game) => {
         setGame(data);
@@ -65,15 +59,8 @@ export default function GameDetailPage() {
           setSelectedImage(data.thumbnail_url || "");
         }
 
-        if (viewerCreatorId && data.creator_id === viewerCreatorId) {
-          return;
-        }
-
         fetch(`/api/games/${gameId}/view`, {
           method: "POST",
-          headers: {
-            "x-viewer-creator-id": viewerCreatorId,
-          },
         }).catch(console.error);
       })
       .catch(console.error);
@@ -142,13 +129,8 @@ export default function GameDetailPage() {
   const downloadGame = async () => {
     if (!gameId) return;
 
-    const viewerCreatorId = localStorage.getItem("creatorId") || "";
-
     const res = await fetch(`/api/games/${gameId}/download`, {
       method: "POST",
-      headers: {
-        "x-viewer-creator-id": viewerCreatorId,
-      },
     });
 
     const json = await res.json();

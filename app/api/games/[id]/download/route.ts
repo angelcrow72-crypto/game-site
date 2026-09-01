@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
@@ -7,12 +7,30 @@ const supabase = createClient(
 );
 
 export async function POST(
-  req: Request,
+  req: NextRequest,
   ctx: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await ctx.params;
-    const viewerCreatorId = req.headers.get("x-viewer-creator-id") || "";
+
+    const token = req.cookies.get("gameverse_creator_session")?.value;
+
+    let viewerCreatorId = "";
+
+    if (token) {
+      const { data: session } = await supabase
+        .from("creator_sessions")
+        .select("creator_id, expires_at")
+        .eq("token", token)
+        .maybeSingle();
+
+      if (
+        session &&
+        new Date(session.expires_at) >= new Date()
+      ) {
+        viewerCreatorId = String(session.creator_id);
+      }
+    }
 
     const { data, error } = await supabase
       .from("games")

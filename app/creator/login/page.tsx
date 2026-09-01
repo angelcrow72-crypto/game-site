@@ -36,16 +36,6 @@ export default function CreatorLoginPage() {
         return;
       }
 
-      localStorage.setItem(
-        "gameverse_creator_id",
-        String(json.creator.id)
-      );
-
-      localStorage.setItem(
-        "gameverse_creator_name",
-        String(json.creator.display_name ?? "")
-      );
-
       location.href = "/creator/dashboard";
     } catch {
       setMessage("通信エラーが発生しました。");

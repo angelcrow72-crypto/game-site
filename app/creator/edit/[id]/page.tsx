@@ -59,9 +59,31 @@ export default function CreatorEditPage() {
   useEffect(() => {
     if (!gameId) return;
 
-    fetch(`/api/games/${gameId}`)
-      .then((res) => res.json())
-      .then((game: Game) => {
+    const loadGame = async () => {
+      try {
+        const res = await fetch(`/api/creator/games/${gameId}`);
+        const data = await res.json();
+
+        // 未ログイン・セッション切れ
+        if (res.status === 401) {
+          location.href = "/creator/login";
+          return;
+        }
+
+        // ログインしているが、他作者の作品
+        if (res.status === 403) {
+          alert("このゲームを編集する権限がありません。");
+          location.href = "/creator/dashboard";
+          return;
+        }
+
+        if (!res.ok) {
+          setMessage(data?.error ?? "ゲーム情報の取得に失敗しました");
+          return;
+        }
+
+        const game: Game = data;
+
         setTitle(game.title || "");
         setCreator(game.creator || "");
 
@@ -92,10 +114,12 @@ export default function CreatorEditPage() {
 
         setDownloadUrl(game.download_url || "");
         setWebglPlayUrl(game.webgl_play_url || "");
-      })
-      .catch(() => {
+      } catch {
         setMessage("ゲーム情報の取得に失敗しました");
-      });
+      }
+    };
+
+    loadGame();
   }, [gameId]);
 
   const updateThumbnailUrl = (index: number, value: string) => {
@@ -353,7 +377,7 @@ export default function CreatorEditPage() {
                     value={creator}
                     onChange={(e) => setCreator(e.target.value)}
                     className="w-full rounded-lg border px-4 py-2"
-                    placeholder="例：GOYA"
+                    placeholder="作者名を入力してください"
                   />
                 </div>
 

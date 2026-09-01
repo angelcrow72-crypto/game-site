@@ -61,10 +61,6 @@ export default function Home() {
         return;
       }
 
-      localStorage.setItem("gameverse_creator_access", "true");
-      localStorage.setItem("gameverse_creator_id", data.creatorId);
-      localStorage.setItem("gameverse_creator_name", data.creatorName || "");
-
       window.location.href = "/creator/dashboard";
     } catch (e) {
       console.error(e);

@@ -6,7 +6,7 @@ const supabase = createClient(
   process.env.SUPABASE_SECRET_KEY!
 );
 
-export async function POST(
+export async function GET(
   req: NextRequest,
   ctx: { params: Promise<{ id: string }> }
 ) {
@@ -37,7 +37,7 @@ export async function POST(
       );
     }
 
-    // セッションの有効期限を確認
+    // 有効期限を確認
     if (new Date(session.expires_at) < new Date()) {
       return NextResponse.json(
         { error: "ログインセッションの有効期限が切れています。" },
@@ -45,37 +45,46 @@ export async function POST(
       );
     }
 
-    // ログイン中の作者本人が所有している作品だけ非公開化
-    const { data: hiddenGame, error } = await supabase
+    // ログイン中の作者本人が所有するゲームだけ取得
+    const { data: game, error: gameError } = await supabase
       .from("games")
-      .update({
-        deleted: true,
-        delete_reason: "creator",
-      })
+      .select(`
+        id,
+        title,
+        creator,
+        creator_id,
+        genre,
+        recommended_age,
+        recommended_environment,
+        description,
+        play_time,
+        endings_count,
+        controls,
+        streaming_policy,
+        thumbnail_url,
+        thumbnail_urls,
+        download_url,
+        browser_play_url,
+        webgl_play_url,
+        webgl_zip_url,
+        view_count,
+        created_at
+      `)
       .eq("id", id)
       .eq("creator_id", session.creator_id)
-      .select("id")
-      .maybeSingle();
+      .single();
 
-    if (error) {
+    if (gameError || !game) {
       return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      );
-    }
-
-    // 他作者の作品なら更新対象が0件になる
-    if (!hiddenGame) {
-      return NextResponse.json(
-        { error: "このゲームを削除する権限がありません。" },
+        { error: "このゲームを編集する権限がありません。" },
         { status: 403 }
       );
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json(game);
   } catch (e: any) {
     return NextResponse.json(
-      { error: e?.message ?? "非公開化エラー" },
+      { error: e?.message ?? "取得エラー" },
       { status: 500 }
     );
   }

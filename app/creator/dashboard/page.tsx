@@ -22,7 +22,6 @@ type Game = {
 };
 
 export default function CreatorDashboardPage() {
-  const [creatorId, setCreatorId] = useState("");
   const [creatorName, setCreatorName] = useState("");
 
   const [title, setTitle] = useState("");
@@ -44,23 +43,35 @@ export default function CreatorDashboardPage() {
   const [uploadingZip, setUploadingZip] = useState(false);
 
   useEffect(() => {
-    const id = localStorage.getItem("gameverse_creator_id") || "";
-    const name = localStorage.getItem("gameverse_creator_name") || "";
+    const checkLogin = async () => {
+      try {
+        const res = await fetch("/api/creator/me");
 
-    if (!id) {
-      location.href = "/creator/login";
-      return;
-    }
+        if (!res.ok) {
+          location.href = "/creator/login";
+          return;
+        }
 
-    setCreatorId(id);
-    setCreatorName(name);
+        const data = await res.json();
 
-    loadMyGames(id);
+        const name = String(
+          data.creator.display_name ?? data.creator.name ?? ""
+        );
+
+        setCreatorName(name);
+
+        await loadMyGames();
+      } catch {
+        location.href = "/creator/login";
+      }
+    };
+
+    checkLogin();
   }, []);
 
-  async function loadMyGames(id: string) {
+  async function loadMyGames() {
     try {
-      const res = await fetch(`/api/creator/games?creatorId=${id}`);
+      const res = await fetch("/api/creator/games");
       const data = await res.json();
 
       if (Array.isArray(data)) {
@@ -223,7 +234,6 @@ export default function CreatorDashboardPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          creatorId,
           title: title.trim(),
           creator: creatorName,
           genre: finalGenre,
@@ -250,7 +260,7 @@ export default function CreatorDashboardPage() {
       }
 
       setMessage("投稿しました。トップページに反映されます。");
-      loadMyGames(creatorId);
+      loadMyGames();
 
       setTitle("");
       setGenre("ホラー");
@@ -284,7 +294,7 @@ export default function CreatorDashboardPage() {
       }
 
       alert("非公開にしました");
-      loadMyGames(creatorId);
+      loadMyGames();
     } catch {
       alert("通信エラーが発生しました");
     }
@@ -307,16 +317,20 @@ export default function CreatorDashboardPage() {
       }
 
       alert("再公開しました");
-      loadMyGames(creatorId);
+      loadMyGames();
     } catch {
       alert("通信エラーが発生しました");
     }
   };
 
-  const onLogout = () => {
-    localStorage.removeItem("creatorId");
-    localStorage.removeItem("creatorName");
-    location.href = "/creator/login";
+  const onLogout = async () => {
+    try {
+      await fetch("/api/creator/logout", {
+        method: "POST",
+      });
+    } finally {
+      location.href = "/creator/login";
+    }
   };
 
   return (
