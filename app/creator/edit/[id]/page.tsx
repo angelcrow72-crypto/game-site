@@ -137,79 +137,60 @@ export default function CreatorEditPage() {
     setThumbnailUrls(thumbnailUrls.filter((_, i) => i !== index));
   };
 
-  const uploadZip = async (file: File) => {
-    if (!file.name.toLowerCase().endsWith(".zip")) {
-      setMessage("ZIPファイルのみアップロードできます");
-      return;
-    }
+const uploadZip = async (file: File) => {
+  if (!file.name.toLowerCase().endsWith(".zip")) {
+    setMessage("ZIPファイルのみアップロードできます");
+    return;
+  }
 
-    if (file.size > 2 * 1024 * 1024 * 1024) {
-      setMessage("ZIPファイルは2GB以下にしてください");
-      return;
-    }
+  if (file.size > 2 * 1024 * 1024 * 1024) {
+    setMessage("ZIPファイルは2GB以下にしてください");
+    return;
+  }
 
-    setUploadingZip(true);
-    setMessage("ダウンロード用ZIPをアップロード中...");
+  setUploadingZip(true);
+  setMessage("ダウンロード用ZIPをアップロード中...");
 
-    try {
-      const signResponse = await fetch("/api/upload/game/sign", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          fileName: file.name,
-        }),
+  try {
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const fileName = `${Date.now()}-${crypto.randomUUID()}-${safeName}`;
+
+    const { data, error } = await supabase.storage
+      .from("game-files")
+      .upload(fileName, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: "application/zip",
       });
 
-      const signResult = await signResponse.json();
-
-      if (!signResponse.ok) {
-        throw new Error(
-          signResult?.error ?? "アップロードURLの発行に失敗しました"
-        );
-      }
-
-      const { path, token } = signResult;
-
-      if (!path || !token) {
-        throw new Error("アップロード情報を取得できませんでした");
-      }
-
-      const { error: uploadError } = await supabase.storage
-        .from("game-files")
-        .uploadToSignedUrl(path, token, file, {
-          contentType: "application/zip",
-        });
-
-      if (uploadError) {
-        throw new Error(uploadError.message);
-      }
-
-      const { data: publicUrlData } = supabase.storage
-        .from("game-files")
-        .getPublicUrl(path);
-
-      if (!publicUrlData.publicUrl) {
-        throw new Error("ダウンロードURLの取得に失敗しました");
-      }
-
-      setDownloadUrl(publicUrlData.publicUrl);
-      setMessage(
-        "ダウンロード用ZIPをアップロードしました。保存ボタンを押してください。"
-      );
-    } catch (error) {
-      console.error("ZIP UPLOAD ERROR:", error);
-
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "ZIPアップロード中にエラーが発生しました"
-      );
-    } finally {
-      setUploadingZip(false);
+    if (error) {
+      throw new Error(error.message);
     }
-  };
+
+    const { data: publicUrlData } = supabase.storage
+      .from("game-files")
+      .getPublicUrl(data.path);
+
+    if (!publicUrlData.publicUrl) {
+      throw new Error("ダウンロードURLの取得に失敗しました");
+    }
+
+    setDownloadUrl(publicUrlData.publicUrl);
+    setMessage(
+      "ダウンロード用ZIPをアップロードしました。保存ボタンを押してください。"
+    );
+  } catch (error) {
+    console.error("ZIP UPLOAD ERROR:", error);
+
+    setMessage(
+      error instanceof Error
+        ? error.message
+        : "ZIPアップロード中にエラーが発生しました"
+    );
+  } finally {
+    setUploadingZip(false);
+  }
+};
 
   const uploadWebglZip = async (file: File) => {
     if (!file.name.toLowerCase().endsWith(".zip")) {
