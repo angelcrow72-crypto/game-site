@@ -9,6 +9,16 @@ type VisitStats = {
   active: number;
 };
 
+type AdminGame = {
+  id: number;
+  title: string;
+  creator: string;
+  download_url?: string | null;
+  browser_play_url?: string | null;
+  webgl_play_url?: string | null;
+  created_at?: string | null;
+};
+
 export default function AdminPage() {
   const [password, setPassword] = useState("");
   const [adminMode, setAdminMode] = useState(false);
@@ -17,6 +27,11 @@ export default function AdminPage() {
   const [visitStats, setVisitStats] = useState<VisitStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
   const [statsError, setStatsError] = useState("");
+
+  const [games, setGames] = useState<AdminGame[]>([]);
+  const [gamesLoading, setGamesLoading] = useState(false);
+  const [gamesError, setGamesError] = useState("");
+  const [removingBrowserId, setRemovingBrowserId] = useState<number | null>(null);
 
   const loadVisitStats = useCallback(async () => {
     setStatsLoading(true);
@@ -55,6 +70,38 @@ export default function AdminPage() {
     }
   }, []);
 
+    const loadGames = useCallback(async () => {
+      setGamesLoading(true);
+      setGamesError("");
+
+      try {
+        const response = await fetch("/api/admin/games", {
+          method: "GET",
+          cache: "no-store",
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.error || "作品一覧の取得に失敗しました。"
+          );
+        }
+
+        setGames(data.games ?? []);
+      } catch (error) {
+        console.error("Admin games load error:", error);
+
+        setGamesError(
+          error instanceof Error
+            ? error.message
+            : "作品一覧の取得に失敗しました。"
+        );
+      } finally {
+        setGamesLoading(false);
+      }
+    }, []);
+
   useEffect(() => {
     const checkSession = async () => {
       try {
@@ -76,6 +123,7 @@ export default function AdminPage() {
 
         if (loggedIn) {
           loadVisitStats();
+          loadGames();
         }
       } catch (error) {
         console.error("Admin session check error:", error);
@@ -84,7 +132,7 @@ export default function AdminPage() {
     };
 
     checkSession();
-  }, [loadVisitStats]);
+  }, [loadVisitStats, loadGames]);
 
   const login = async () => {
     setMessage("");
@@ -118,9 +166,57 @@ export default function AdminPage() {
       });
 
       loadVisitStats();
+      loadGames();
     } catch (error) {
       console.error("Admin login error:", error);
       setMessage("ログイン処理中に通信エラーが発生しました。");
+    }
+  };
+
+  const removeBrowserVersion = async (game: AdminGame) => {
+    const confirmed = window.confirm(
+      `「${game.title}」の外部ブラウザ版を削除しますか？\n\nダウンロード版は削除されません。\nWebGL版に同じ外部URLが重複登録されている場合は、そちらも削除します。`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setRemovingBrowserId(game.id);
+    setGamesError("");
+    setMessage("");
+
+    try {
+      const response = await fetch(
+        `/api/admin/games/${game.id}/remove-browser`,
+        {
+          method: "POST",
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error || "ブラウザ版の削除に失敗しました。"
+        );
+      }
+
+      setMessage(
+        `「${game.title}」のブラウザ版を削除しました。`
+      );
+
+      await loadGames();
+    } catch (error) {
+      console.error("Browser version removal error:", error);
+
+      setGamesError(
+        error instanceof Error
+          ? error.message
+          : "ブラウザ版の削除に失敗しました。"
+      );
+    } finally {
+      setRemovingBrowserId(null);
     }
   };
 
@@ -137,6 +233,8 @@ export default function AdminPage() {
 
       setAdminMode(false);
       setVisitStats(null);
+      setGames([]);
+      setGamesError("");
       setStatsError("");
       setMessage("管理者モードをOFFにしました。");
     } catch (error) {
@@ -274,6 +372,104 @@ export default function AdminPage() {
                   value={visitStats.total}
                   note="記録開始以降"
                 />
+              </div>
+            )}
+          </section>
+        )}
+
+        {adminMode && (
+          <section className="mt-6 rounded-xl bg-white p-5 shadow sm:p-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-bold text-black">
+                  作品管理
+                </h2>
+
+                <p className="mt-1 text-sm text-gray-600">
+                  各作品の登録状況を確認できます。
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={loadGames}
+                disabled={gamesLoading}
+                className="rounded-lg border px-4 py-2 text-sm font-semibold text-black disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {gamesLoading ? "更新中..." : "再読み込み"}
+              </button>
+            </div>
+
+            {gamesError && (
+              <div className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+                {gamesError}
+              </div>
+            )}
+
+            {gamesLoading && games.length === 0 && (
+              <div className="mt-6 text-sm text-gray-600">
+                作品一覧を読み込んでいます...
+              </div>
+            )}
+
+            {!gamesLoading && games.length === 0 && !gamesError && (
+              <div className="mt-6 text-sm text-gray-600">
+                登録作品はありません。
+              </div>
+            )}
+
+            {games.length > 0 && (
+              <div className="mt-6 space-y-4">
+                {games.map((game) => (
+                  <div
+                    key={game.id}
+                    className="rounded-xl border bg-[#fafafa] p-4"
+                  >
+                    <div className="font-bold text-black">
+                      {game.title}
+                    </div>
+
+                    <div className="mt-1 text-sm text-gray-600">
+                      作者：{game.creator}
+                    </div>
+
+                    <div className="mt-4 space-y-2 text-sm">
+                      <div className="text-black">
+                        ダウンロード版：
+                        <span className="font-semibold">
+                          {game.download_url ? "あり" : "なし"}
+                        </span>
+                      </div>
+
+                      <div className="text-black">
+                        外部ブラウザ版：
+                        <span className="font-semibold">
+                          {game.browser_play_url ? "あり" : "なし"}
+                        </span>
+                      </div>
+
+                      <div className="text-black">
+                        WebGL版：
+                        <span className="font-semibold">
+                          {game.webgl_play_url ? "あり" : "なし"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {game.browser_play_url && (
+                      <button
+                        type="button"
+                        onClick={() => removeBrowserVersion(game)}
+                        disabled={removingBrowserId === game.id}
+                        className="mt-4 rounded-lg border border-red-300 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {removingBrowserId === game.id
+                          ? "削除中..."
+                          : "外部ブラウザ版を削除"}
+                      </button>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
           </section>
