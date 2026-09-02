@@ -520,9 +520,31 @@ const uploadZip = async (file: File) => {
             </label>
 
             {downloadUrl && (
-              <p className="mt-2 break-all text-xs text-gray-500">
-                登録済み：{downloadUrl}
-              </p>
+              <div className="mt-2">
+                <p className="break-all text-xs text-gray-500">
+                  登録済み：{downloadUrl}
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!webglPlayUrl) {
+                      setMessage(
+                        "ブラウザ版が登録されていないため、ダウンロード版は削除できません。"
+                      );
+                      return;
+                    }
+
+                    setDownloadUrl("");
+                    setMessage(
+                      "ダウンロード版を削除対象にしました。保存ボタンを押してください。"
+                    );
+                  }}
+                  className="mt-2 rounded-lg border border-red-300 px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50"
+                >
+                  ダウンロード版を削除
+                </button>
+              </div>
             )}
           </div>
 
@@ -553,9 +575,31 @@ const uploadZip = async (file: File) => {
             </label>
 
             {webglPlayUrl && (
-              <p className="mt-2 break-all text-xs text-gray-500">
-                登録済み：{webglPlayUrl}
-              </p>
+              <div className="mt-2">
+                <p className="break-all text-xs text-gray-500">
+                  登録済み：{webglPlayUrl}
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!downloadUrl) {
+                      setMessage(
+                        "ダウンロード版が登録されていないため、ブラウザ版は削除できません。"
+                      );
+                      return;
+                    }
+
+                    setWebglPlayUrl("");
+                    setMessage(
+                      "ブラウザ版を削除対象にしました。保存ボタンを押してください。"
+                    );
+                  }}
+                  className="mt-2 rounded-lg border border-red-300 px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50"
+                >
+                  ブラウザ版を削除
+                </button>
+              </div>
             )}
           </div>
 
