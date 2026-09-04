@@ -240,6 +240,37 @@ export default function ZatsudanThreadPage() {
           </ul>
         </details>
 
+        <div className="mt-4 rounded-lg border p-4">
+          <div className="text-lg font-bold text-black">書き込み</div>
+
+          <input
+            className="w-full rounded-lg border px-3 py-2 text-black placeholder:text-gray-700"
+            placeholder="名無しさん"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            maxLength={MAX_NAME}
+          />
+
+          <textarea
+            ref={bodyInputRef}
+            style={{ resize: "none" }}
+            className="w-full rounded-lg border px-3 py-2 text-black placeholder:text-gray-700"
+            rows={5}
+            placeholder="本文"
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            maxLength={MAX_BODY}
+          />
+
+          <button
+            className="mt-3 w-full rounded-lg bg-black px-4 py-2 text-white disabled:opacity-50"
+            disabled={!canSubmit}
+            onClick={onSubmit}
+          >
+            書き込む
+          </button>
+        </div>
+
         <div className="mt-4 flex justify-end">
           <button
             className="rounded-lg border px-3 py-1 text-xs text-black hover:bg-gray-50"
@@ -410,37 +441,7 @@ export default function ZatsudanThreadPage() {
               )}
             </div>
 
-            <div className="mt-10 rounded-lg border p-4">
-              <div className="text-lg font-bold text-black">書き込み</div>
 
-              <input
-                className="w-full rounded-lg border px-3 py-2 text-black placeholder:text-gray-700"
-                placeholder="名無しさん"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                maxLength={MAX_NAME}
-              />
-
-              <textarea
-                ref={bodyInputRef}
-                style={{ resize: "none" }}
-                className="w-full rounded-lg border px-3 py-2 text-black placeholder:text-gray-700"
-                rows={5}
-                placeholder="本文"
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                maxLength={MAX_BODY}
-              />
-
-              <button
-                className="mt-3 w-full rounded-lg bg-black px-4 py-2 text-white disabled:opacity-50"
-                disabled={!canSubmit}
-                onClick={onSubmit}
-              >
-                書き込む
-              </button>
-
-            </div>
           </>
         )}
       </div>
