@@ -261,7 +261,9 @@ export default function ZatsudanThreadPage() {
                   読み込み中…
                 </div>
               ) : (
-                posts.map((p, idx) => {
+                [...posts].reverse().map((p, idx) => {
+                  const originalIndex = posts.length - 1 - idx;
+                  const postNo = originalIndex + 1;
                   // ✅ idがどの名前でも拾えるようにする（stringで統一）
                   const postIdRaw =
                     (p as any).id ?? (p as any).postId ?? (p as any).post_id;
@@ -269,14 +271,14 @@ export default function ZatsudanThreadPage() {
 
                   return (
                     <div
-                      id={`post-${idx + 1}`}
+                      id={`post-${postNo}`}
                       key={postId || `${idx}`}
                       className="rounded-lg border p-4"
                     >
                       <div className="flex justify-between text-sm text-gray-600">
                         <div className="flex items-center gap-2">
                           <span className="font-semibold">
-                            <span className="text-blue-600">#{idx + 1}</span> {p.name}
+                            <span className="text-blue-600">#{postNo}</span> {p.name}
                           </span>
 
                           <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
@@ -322,7 +324,7 @@ export default function ZatsudanThreadPage() {
                         <button
                           className="rounded-lg border px-3 py-1 text-black hover:bg-gray-50"
                           onClick={() => {
-                            const replyText = `>>${idx + 1}\n`;
+                            const replyText = `>>${postNo}\n`;
 
                             setBody((prev) => replyText + prev);
 
